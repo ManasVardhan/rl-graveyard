@@ -1,38 +1,14 @@
-# RL Graveyard -- Where Agents Go to Die
+# RL Graveyard: A Systematic Catalog of Reinforcement Learning Failure Modes
 
-A visual catalog of every way reinforcement learning algorithms fail. Trains 500+ agents across environments and surfaces the beautiful, tragic ways they collapse.
+An empirical study of where and how reinforcement learning algorithms fail across diverse environments.
 
-## The Hook
+## Motivation
 
-"I trained 500 RL agents and killed 487 of them. Here is where they died."
+The reinforcement learning literature overwhelmingly reports success curves and convergence plots. The failures, which constitute the majority of training runs in practice, are rarely documented or analyzed. This project attempts to correct that imbalance by training hundreds of RL agents, classifying their exact failure modes, and visualizing the results.
 
-## Concept
+## Research Question
 
-Every RL paper shows the success curve. Nobody shows the death curve. This project:
-
-1. Trains 10 algorithms (PPO, SAC, TD3, A2C, DQN, etc.) across 50+ Gymnasium/MuJoCo/Procgen environments
-2. Logs exact failure mode: reward hacking, catastrophic forgetting, exploration collapse, death spiral, NaN explosion
-3. Builds an interactive 3D graveyard where each dead agent is a tombstone with cause of death
-4. Surfaces which algorithms die where, and why
-
-## Stack
-
-- CleanRL for fast, readable algorithm implementations
-- WandB for experiment tracking
-- Three.js for the 3D graveyard visualization
-- Python + PyTorch for training pipeline
-
-## Architecture
-
-```
-rl-graveyard/
-├── agents/              # CleanRL-style algorithm implementations
-├── envs/                # Environment wrappers + custom failure detectors
-├── graveyard/           # 3D visualization (Three.js + D3.js)
-├── experiments/         # Training configs per algorithm-env pair
-├── analysis/            # Failure mode classification pipeline
-└── data/                # SQLite DB of all training runs
-```
+Which RL algorithms fail on which environments, and why? Can we predict failure from training dynamics?
 
 ## Failure Taxonomy
 
@@ -40,16 +16,16 @@ rl-graveyard/
 |------|------|-------------|
 | RH | Reward Hacking | Agent finds unintended shortcut to high reward |
 | CF | Catastrophic Forgetting | Agent forgets earlier skills |
-| EC | Exploration Collapse | Policy collapses to single action |
-| DS | Death Spiral | Loss diverges, entropy crashes |
+| EC | Exploration Collapse | Policy collapses to single action, entropy flatlines |
+| DS | Death Spiral | Loss diverges, returns crash |
 | NE | NaN Explosion | Gradients or losses become NaN |
-| SI | Sim-overfitting | Works in sim, fails on tiny env change |
-| ST | Stalling | Plateaus forever at suboptimal |
-| OS | Overshooting | Oscillates around optimal, never settles |
+| SI | Simulation Overfitting | Works in training distribution, fails on slight perturbation |
+| ST | Stalling | Plateaus indefinitely at suboptimal performance |
+| OS | Overshooting | Oscillates around optimal, never converges |
 
-## Training Protocol
+## Methodology
 
-Each algorithm x environment pair gets 5 seeds x 1M steps. We log:
+For each algorithm-environment pair, we run 5 seeds for 1M steps, logging:
 - Episode returns
 - Policy entropy
 - Value function estimates
@@ -57,21 +33,50 @@ Each algorithm x environment pair gets 5 seeds x 1M steps. We log:
 - Action distributions
 - Environment-specific success metrics
 
-## Visualization
+Failure classification uses a rule-based diagnostic applied to the training trajectory post-hoc.
 
-Interactive 3D graveyard where:
-- X axis: Algorithm family
-- Y axis: Environment difficulty
-- Z axis: Failure mode category
-- Each tombstone: one dead agent, hover for autopsy
+## Architecture
 
-## Viral Mechanics
+```
+rl-graveyard/
+├── agents/              # Algorithm implementations (PPO, SAC, TD3, A2C, DQN)
+├── envs/                # Environment wrappers and failure detectors
+├── graveyard/           # Interactive visualization layer
+├── experiments/         # Training configurations
+├── analysis/            # Failure classification pipeline
+└── data/                # SQLite database of all training runs
+```
 
-- Auto-generate "death certificates" for agents (shareable PNGs)
-- Leaderboard: "Most Survivable Algorithm" by environment category
-- Weekly "autopsy reports" on X
-- Users can submit their own dead agents
+## Current Status
+
+Proof of concept: single PPO agent trained on CartPole-v1 exhibits exploration collapse within 50,000 steps. The diagnostic classifier correctly identifies the failure mode from entropy trajectory.
+
+## Dependencies
+
+```
+torch>=2.0.0
+gymnasium>=0.29.0
+numpy>=1.24.0
+```
+
+## Running
+
+```bash
+python graveyard.py
+```
+
+## Citation
+
+If you use this work, please cite:
+```
+@software{rl_graveyard_2026,
+  author = {Vardhan, Manas},
+  title = {RL Graveyard: A Systematic Catalog of RL Failure Modes},
+  year = {2026},
+  url = {https://github.com/ManasVardhan/rl-graveyard}
+}
+```
 
 ## License
 
-MIT -- build in public, share the carnage.
+MIT
