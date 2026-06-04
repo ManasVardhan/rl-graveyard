@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="banner.png" alt="RL Graveyard Banner" width="100%">
+</p>
+
 # RL Graveyard: A Systematic Catalog of Reinforcement Learning Failure Modes
 
 An empirical study of where and how reinforcement learning algorithms fail across diverse environments.
