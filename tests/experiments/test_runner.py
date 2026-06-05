@@ -35,3 +35,39 @@ def test_all_algos_complete_short_run(algo, tmp_path):
     autopsy = cur.fetchone()
     assert autopsy is not None
     conn.close()
+
+
+def test_default_hparams_are_logged(tmp_path):
+    """Even when cfg.hparams is empty, the agent's defaults are persisted."""
+    import json
+    from data.db import init_db
+
+    conn = init_db(tmp_path / "graveyard.sqlite")
+    cfg = ExperimentConfig(algo="PPO", env="CartPole-v1", seed=0, total_steps=500)
+    run_id = train_and_record(cfg, conn)
+    run = get_run(conn, run_id)
+    hparams = json.loads(run["hparams_json"])
+    # PPO defaults: lr=3e-4, gamma=0.99, lam=0.95, clip_eps=0.2 — must all be present
+    assert hparams["lr"] == 3e-4
+    assert hparams["gamma"] == 0.99
+    assert hparams["lam"] == 0.95
+    assert hparams["clip_eps"] == 0.2
+    conn.close()
+
+
+def test_explicit_hparams_override_defaults(tmp_path):
+    """cfg.hparams takes precedence over agent defaults."""
+    import json
+    from data.db import init_db
+
+    conn = init_db(tmp_path / "graveyard.sqlite")
+    cfg = ExperimentConfig(
+        algo="PPO", env="CartPole-v1", seed=0, total_steps=500,
+        hparams={"lr": 1e-2},
+    )
+    run_id = train_and_record(cfg, conn)
+    run = get_run(conn, run_id)
+    hparams = json.loads(run["hparams_json"])
+    assert hparams["lr"] == 1e-2
+    assert hparams["gamma"] == 0.99  # untouched default still present
+    conn.close()

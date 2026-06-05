@@ -32,6 +32,17 @@ if TYPE_CHECKING:
 STEP_METRIC_STRIDE = 100  # Log to SQLite every 100 env steps (downsampling for storage)
 
 
+def _snapshot_agent_hparams(agent) -> dict:
+    """Snapshot all scalar hyperparameter attributes on the agent for reproducibility."""
+    skip = {"obs_dim", "act_dim", "epsilon"}  # obs/act dims are env-derived; epsilon is mutated during training
+    return {
+        k: v for k, v in vars(agent).items()
+        if isinstance(v, (int, float, str, bool))
+        and not k.startswith("_")
+        and k not in skip
+    }
+
+
 def train_and_record(cfg: ExperimentConfig, conn: sqlite3.Connection) -> int:
     """Train one agent, persist everything, run autopsy, return run_id."""
     np.random.seed(cfg.seed)
@@ -41,10 +52,11 @@ def train_and_record(cfg: ExperimentConfig, conn: sqlite3.Connection) -> int:
     obs_dim = env.observation_space.shape[0]
     act_dim = env.action_space.n
     agent = build_agent(cfg, obs_dim=obs_dim, act_dim=act_dim)
+    effective_hparams = {**_snapshot_agent_hparams(agent), **cfg.hparams}
 
     run_id = insert_run(
         conn, algo=cfg.algo, env=cfg.env, seed=cfg.seed,
-        total_steps=cfg.total_steps, hparams=cfg.hparams,
+        total_steps=cfg.total_steps, hparams=effective_hparams,
     )
 
     entropy_log: list[float] = []

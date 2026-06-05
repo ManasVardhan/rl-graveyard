@@ -61,6 +61,7 @@ class PPOAgent(Agent):
     ):
         super().__init__(obs_dim, act_dim)
         self.net = ActorCriticNet(obs_dim, act_dim)
+        self.lr = lr
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr)
         self.gamma = gamma
         self.lam = lam
