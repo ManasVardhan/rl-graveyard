@@ -78,6 +78,7 @@ class DQNAgent(Agent):
         for p in self.target_net.parameters():
             p.requires_grad = False
         self.optimizer = torch.optim.Adam(self.q_net.parameters(), lr=lr)
+        self.lr = lr
         self.gamma = gamma
         self.epsilon_start = epsilon_start
         self.epsilon_end = epsilon_end

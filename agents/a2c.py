@@ -51,6 +51,7 @@ class A2CAgent(Agent):
         super().__init__(obs_dim, act_dim)
         self.net = ActorCriticNet(obs_dim, act_dim)
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=lr)
+        self.lr = lr
         self.gamma = gamma
         self.value_coef = value_coef
         self.entropy_coef = entropy_coef

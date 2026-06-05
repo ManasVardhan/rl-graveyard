@@ -45,6 +45,7 @@ class REINFORCEAgent(Agent):
         super().__init__(obs_dim, act_dim)
         self.policy = PolicyNet(obs_dim, act_dim)
         self.optimizer = torch.optim.Adam(self.policy.parameters(), lr=lr)
+        self.lr = lr
         self.gamma = gamma
         self.entropy_coef = entropy_coef
         self.grad_clip = grad_clip

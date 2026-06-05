@@ -71,3 +71,26 @@ def test_explicit_hparams_override_defaults(tmp_path):
     assert hparams["lr"] == 1e-2
     assert hparams["gamma"] == 0.99  # untouched default still present
     conn.close()
+
+
+def test_default_hparams_logged_for_all_algos(tmp_path):
+    """Every algo's learning rate must land in hparams_json."""
+    import json
+    from data.db import init_db
+
+    expected_lr = {
+        "PPO": 3e-4,
+        "A2C": 7e-4,
+        "REINFORCE": 1e-3,
+        "DQN": 5e-4,
+        "DoubleDQN": 5e-4,
+        "DuelingDQN": 5e-4,
+    }
+    for algo, lr in expected_lr.items():
+        conn = init_db(tmp_path / f"{algo}.sqlite")
+        cfg = ExperimentConfig(algo=algo, env="CartPole-v1", seed=0, total_steps=500)
+        run_id = train_and_record(cfg, conn)
+        run = get_run(conn, run_id)
+        hparams = json.loads(run["hparams_json"])
+        assert hparams["lr"] == lr, f"{algo} missing lr or wrong default"
+        conn.close()
