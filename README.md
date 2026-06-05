@@ -43,31 +43,60 @@ Failure classification uses a rule-based diagnostic applied to the training traj
 
 ```
 rl-graveyard/
-├── agents/              # Algorithm implementations (PPO, SAC, TD3, A2C, DQN)
-├── envs/                # Environment wrappers and failure detectors
-├── graveyard/           # Interactive visualization layer
-├── experiments/         # Training configurations
-├── analysis/            # Failure classification pipeline
-└── data/                # SQLite database of all training runs
+├── agents/              # PPO, A2C, REINFORCE, DQN, Double DQN, Dueling DQN
+├── envs/                # Registry, logging wrapper, RewardTrap-v0
+├── experiments/         # Config dataclass + per-algo training loops
+├── analysis/            # Six failure-mode detectors + diagnose() orchestrator
+├── data/                # SQLite schema + CRUD helpers
+├── common/              # Shared types (Trajectory, Verdict, EnvMeta)
+└── docs/                # Specs and plans
 ```
 
 ## Current Status
 
-Proof of concept: single PPO agent trained on CartPole-v1 exhibits exploration collapse within 50,000 steps. The diagnostic classifier correctly identifies the failure mode from entropy trajectory.
+Phase 1 (backend skeleton) complete: all 6 algorithms (PPO, A2C, REINFORCE, DQN,
+Double DQN, Dueling DQN) train end-to-end on 5 environments (CartPole-v1,
+Acrobot-v1, MountainCar-v0, LunarLander-v3, RewardTrap-v0), with episode metrics
+and autopsies persisted to SQLite. Phase 2 (full grid sweep on Modal) and
+Phase 3 (interactive frontend) pending.
 
 ## Dependencies
 
 ```
 torch>=2.0.0
-gymnasium>=0.29.0
+gymnasium[box2d]>=0.29.0
 numpy>=1.24.0
+pyyaml>=6.0
 ```
 
 ## Running
 
+Install dependencies (requires Python 3.10+):
+
 ```bash
-python graveyard.py
+pip install -e ".[dev]"
 ```
+
+Run all tests:
+
+```bash
+pytest
+```
+
+Train a single agent end-to-end:
+
+```python
+from data.db import init_db
+from experiments.config import ExperimentConfig
+from experiments.runner import train_and_record
+
+conn = init_db("data/graveyard.sqlite")
+cfg = ExperimentConfig(algo="PPO", env="CartPole-v1", seed=0, total_steps=200_000)
+train_and_record(cfg, conn)
+```
+
+The full sweep runner (Modal) and the interactive `graveyard/` frontend
+arrive in later phases — see `docs/specs/2026-06-05-v1-design.md`.
 
 ## Citation
 
