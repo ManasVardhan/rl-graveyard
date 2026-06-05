@@ -76,10 +76,9 @@ class REINFORCEAgent(Agent):
         for r in reversed(rewards):
             G = r + self.gamma * G
             returns.insert(0, G)
+        # No normalization — bare REINFORCE without baseline is intentionally high-variance.
+        # The unstable signal is the point: it's a canonical failure mode in the graveyard.
         returns_t = torch.tensor(returns, dtype=torch.float32)
-        # Normalize for variance reduction (this is REINFORCE-with-baseline-lite)
-        if returns_t.numel() > 1:
-            returns_t = (returns_t - returns_t.mean()) / (returns_t.std() + 1e-8)
 
         log_probs_t = torch.stack(log_probs)
         entropies_t = torch.stack(entropies)
