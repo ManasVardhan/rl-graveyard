@@ -135,3 +135,16 @@ class DQNAgent(Agent):
             "grad_norm": float(grad_norm.item()),
             "entropy": 0.0,
         }
+
+
+class DoubleDQNAgent(DQNAgent):
+    """Double DQN: decouples action selection (online net) from evaluation (target net).
+
+    Reduces overestimation bias compared to vanilla DQN.
+    """
+
+    def _td_target(self, next_obs: torch.Tensor, rewards: torch.Tensor, dones: torch.Tensor) -> torch.Tensor:
+        with torch.no_grad():
+            online_argmax = self.q_net(next_obs).argmax(dim=1)
+            next_q = self.target_net(next_obs).gather(1, online_argmax.unsqueeze(1)).squeeze(1)
+            return rewards + self.gamma * next_q * (1.0 - dones)
