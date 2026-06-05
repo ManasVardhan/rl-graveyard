@@ -115,7 +115,7 @@ from analysis.diagnose import detect_overshooting
 
 
 def test_overshooting_high_variance():
-    """CV > 2 over last 50 episodes → wild oscillation."""
+    """CV > 0.8 over last 50 episodes → wild oscillation."""
     returns = [100.0 if i % 2 == 0 else 5.0 for i in range(60)]
     traj = _make_traj(episode_returns=returns, episode_lengths=[100] * 60)
     v = detect_overshooting(traj)
