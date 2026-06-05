@@ -41,3 +41,19 @@ def detect_exploration_collapse(traj: Trajectory) -> Optional[Verdict]:
             f"Entropy collapsed to {tail.mean():.3f} in final 50 steps",
         )
     return None
+
+
+def detect_death_spiral(traj: Trajectory) -> Optional[Verdict]:
+    """Returns crashed: recent mean < 50% of preceding mean.
+
+    Why this threshold: small drops are noise; 50% is large enough that
+    even noisy learning curves don't trip it accidentally.
+    """
+    if len(traj.episode_returns) < 50:
+        return None
+    recent = float(np.mean(traj.episode_returns[-10:]))
+    past = float(np.mean(traj.episode_returns[-50:-10]))
+    if past > 0 and recent < past * 0.5:
+        drop_pct = (past - recent) / past * 100
+        return Verdict("death_spiral", f"Returns dropped {drop_pct:.0f}% in final 10 episodes")
+    return None
