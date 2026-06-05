@@ -129,3 +129,38 @@ def test_overshooting_not_triggered_by_moderate_variance():
         episode_lengths=[100] * 60,
     )
     assert detect_overshooting(traj) is None
+
+
+from analysis.diagnose import detect_reward_hacking
+
+
+def test_reward_hacking_in_reward_trap():
+    """RewardTrap-v0 with returns in trap-farming range + max-length episodes."""
+    traj = _make_traj(
+        env="RewardTrap-v0",
+        episode_returns=[200.0] * 50 + [240.0] * 10,
+        episode_lengths=[500] * 60,
+    )
+    v = detect_reward_hacking(traj)
+    assert v is not None
+    assert v.failure_mode == "reward_hacking"
+
+
+def test_reward_hacking_not_flagged_when_reaching_goal():
+    """High reward + short episodes = reached goal legitimately."""
+    traj = _make_traj(
+        env="RewardTrap-v0",
+        episode_returns=[9.5] * 60,
+        episode_lengths=[20] * 60,
+    )
+    assert detect_reward_hacking(traj) is None
+
+
+def test_reward_hacking_not_flagged_outside_reward_trap():
+    """Detector is scoped to RewardTrap-v0 in v1."""
+    traj = _make_traj(
+        env="CartPole-v1",
+        episode_returns=[200.0] * 60,
+        episode_lengths=[500] * 60,
+    )
+    assert detect_reward_hacking(traj) is None
