@@ -23,3 +23,21 @@ def detect_nan_explosion(traj: Trajectory) -> Optional[Verdict]:
     if any(not np.isfinite(g) for g in tail_grad):
         return Verdict("nan_explosion", "NaN in gradient norms")
     return None
+
+
+def detect_exploration_collapse(traj: Trajectory) -> Optional[Verdict]:
+    """Policy entropy collapsed to near-deterministic in late training.
+
+    Why this threshold: 0.1 nats ≈ 90/10 split for binary action; effectively
+    deterministic. Requires ≥100 entropy samples to ensure we're past
+    early-training high-entropy phase.
+    """
+    if len(traj.entropy_log) < 100:
+        return None
+    tail = np.array(traj.entropy_log[-50:])
+    if tail.mean() < 0.1:
+        return Verdict(
+            "exploration_collapse",
+            f"Entropy collapsed to {tail.mean():.3f} in final 50 steps",
+        )
+    return None

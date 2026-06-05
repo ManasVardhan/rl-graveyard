@@ -37,3 +37,25 @@ def test_nan_in_grad_norm_detected():
 def test_clean_trajectory_not_flagged():
     traj = _make_traj()
     assert detect_nan_explosion(traj) is None
+
+
+from analysis.diagnose import detect_exploration_collapse
+
+
+def test_exploration_collapse_low_entropy():
+    """Entropy < 0.1 in final 50 steps → collapse."""
+    traj = _make_traj(entropy_log=[0.5] * 500 + [0.05] * 500)
+    v = detect_exploration_collapse(traj)
+    assert v is not None
+    assert v.failure_mode == "exploration_collapse"
+
+
+def test_exploration_collapse_not_triggered_by_high_entropy():
+    traj = _make_traj(entropy_log=[0.5] * 1000)
+    assert detect_exploration_collapse(traj) is None
+
+
+def test_exploration_collapse_requires_enough_data():
+    """With < 100 entropy samples, can't conclude collapse."""
+    traj = _make_traj(entropy_log=[0.0] * 50)
+    assert detect_exploration_collapse(traj) is None
