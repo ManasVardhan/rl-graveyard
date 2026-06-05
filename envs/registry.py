@@ -2,8 +2,16 @@
 from __future__ import annotations
 
 import gymnasium as gym
+from gymnasium.envs.registration import register
 
 from common.types import EnvMeta
+from envs.reward_trap import RewardTrapEnv
+
+register(
+    id="RewardTrap-v0",
+    entry_point="envs.reward_trap:RewardTrapEnv",
+    max_episode_steps=500,
+)
 
 
 REGISTRY: dict[str, EnvMeta] = {
@@ -29,6 +37,12 @@ REGISTRY: dict[str, EnvMeta] = {
         name="LunarLander-v3",
         max_steps=1000,
         success_threshold=200.0,
+        act_type="discrete",
+    ),
+    "RewardTrap-v0": EnvMeta(
+        name="RewardTrap-v0",
+        max_steps=500,
+        success_threshold=9.0,
         act_type="discrete",
     ),
 }
