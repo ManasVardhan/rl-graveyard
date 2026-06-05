@@ -109,3 +109,23 @@ def test_stalling_not_triggered_by_learning():
 def test_stalling_requires_500_episodes():
     traj = _make_traj(episode_returns=[10.0] * 400, episode_lengths=[100] * 400)
     assert detect_stalling(traj) is None
+
+
+from analysis.diagnose import detect_overshooting
+
+
+def test_overshooting_high_variance():
+    """CV > 2 over last 50 episodes → wild oscillation."""
+    returns = [100.0 if i % 2 == 0 else 5.0 for i in range(60)]
+    traj = _make_traj(episode_returns=returns, episode_lengths=[100] * 60)
+    v = detect_overshooting(traj)
+    assert v is not None
+    assert v.failure_mode == "overshooting"
+
+
+def test_overshooting_not_triggered_by_moderate_variance():
+    traj = _make_traj(
+        episode_returns=[100.0 + np.random.uniform(-5, 5) for _ in range(60)],
+        episode_lengths=[100] * 60,
+    )
+    assert detect_overshooting(traj) is None

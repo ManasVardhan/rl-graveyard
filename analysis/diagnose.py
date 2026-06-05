@@ -72,3 +72,19 @@ def detect_stalling(traj: Trajectory) -> Optional[Verdict]:
     if cv < 0.05:
         return Verdict("stalling", f"Returns flat (CV={cv:.3f}) for 500 episodes")
     return None
+
+
+def detect_overshooting(traj: Trajectory) -> Optional[Verdict]:
+    """Wild oscillation: CV > 0.8 over last 50 episodes.
+
+    Why this threshold: a learning agent stabilizes; CV of 0.8 means stddev
+    is 80% of the mean — alternating between high and low rewards means
+    the agent's policy is thrashing.
+    """
+    if len(traj.episode_returns) < 50:
+        return None
+    window = np.array(traj.episode_returns[-50:])
+    cv = window.std() / (abs(window.mean()) + 1e-6)
+    if cv > 0.8:
+        return Verdict("overshooting", f"Returns oscillating (CV={cv:.1f})")
+    return None
