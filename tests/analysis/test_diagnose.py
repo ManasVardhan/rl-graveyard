@@ -82,3 +82,30 @@ def test_death_spiral_not_triggered_by_stable_returns():
 def test_death_spiral_requires_50_episodes():
     traj = _make_traj(episode_returns=[100.0] * 30 + [10.0] * 5, episode_lengths=[100] * 35)
     assert detect_death_spiral(traj) is None
+
+
+from analysis.diagnose import detect_stalling
+
+
+def test_stalling_low_variance():
+    """Coefficient of variation < 5% over last 500 episodes → stalling."""
+    traj = _make_traj(
+        episode_returns=[10.0 + np.random.uniform(-0.1, 0.1) for _ in range(600)],
+        episode_lengths=[100] * 600,
+    )
+    v = detect_stalling(traj)
+    assert v is not None
+    assert v.failure_mode == "stalling"
+
+
+def test_stalling_not_triggered_by_learning():
+    traj = _make_traj(
+        episode_returns=list(np.linspace(10, 100, 600)),
+        episode_lengths=[100] * 600,
+    )
+    assert detect_stalling(traj) is None
+
+
+def test_stalling_requires_500_episodes():
+    traj = _make_traj(episode_returns=[10.0] * 400, episode_lengths=[100] * 400)
+    assert detect_stalling(traj) is None

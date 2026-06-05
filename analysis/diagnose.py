@@ -57,3 +57,18 @@ def detect_death_spiral(traj: Trajectory) -> Optional[Verdict]:
         drop_pct = (past - recent) / past * 100
         return Verdict("death_spiral", f"Returns dropped {drop_pct:.0f}% in final 10 episodes")
     return None
+
+
+def detect_stalling(traj: Trajectory) -> Optional[Verdict]:
+    """Flat returns for hundreds of episodes.
+
+    Why this threshold: CV < 5% over 500 episodes is well below random noise
+    for a learning agent; effectively no signal of improvement.
+    """
+    if len(traj.episode_returns) < 500:
+        return None
+    window = np.array(traj.episode_returns[-500:])
+    cv = window.std() / (abs(window.mean()) + 1e-6)
+    if cv < 0.05:
+        return Verdict("stalling", f"Returns flat (CV={cv:.3f}) for 500 episodes")
+    return None
