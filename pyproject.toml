@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rl-graveyard"
+version = "0.1.0"
+description = "A systematic catalog of RL failure modes"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0.0",
+    "gymnasium[box2d]>=0.29.0",
+    "numpy>=1.24.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[tool.setuptools.packages.find]
+include = ["agents*", "envs*", "experiments*", "analysis*", "data*", "common*"]
+exclude = ["tests*", "docs*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
