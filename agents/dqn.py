@@ -148,3 +148,9 @@ class DoubleDQNAgent(DQNAgent):
             online_argmax = self.q_net(next_obs).argmax(dim=1)
             next_q = self.target_net(next_obs).gather(1, online_argmax.unsqueeze(1)).squeeze(1)
             return rewards + self.gamma * next_q * (1.0 - dones)
+
+
+class DuelingDQNAgent(DQNAgent):
+    """Dueling DQN: same training math as DQN, different network architecture."""
+
+    NET_CLASS = DuelingQNet
