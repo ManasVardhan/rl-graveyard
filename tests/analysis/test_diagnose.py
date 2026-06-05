@@ -164,3 +164,26 @@ def test_reward_hacking_not_flagged_outside_reward_trap():
         episode_lengths=[500] * 60,
     )
     assert detect_reward_hacking(traj) is None
+
+
+from analysis.diagnose import diagnose
+
+
+def test_diagnose_returns_alive_for_clean_trajectory():
+    traj = _make_traj(
+        episode_returns=list(np.linspace(10, 200, 600)),
+        episode_lengths=[100] * 600,
+        entropy_log=[0.7] * 1000,
+    )
+    v = diagnose(traj)
+    assert v.failure_mode == "alive"
+
+
+def test_diagnose_priority_nan_beats_others():
+    """When multiple modes apply, NaN wins (it's highest priority)."""
+    traj = _make_traj(
+        episode_returns=[10.0] * 100 + [float("nan")] * 5,
+        entropy_log=[0.0] * 1000,  # would also trigger exploration collapse
+    )
+    v = diagnose(traj)
+    assert v.failure_mode == "nan_explosion"

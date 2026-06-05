@@ -115,3 +115,30 @@ def detect_reward_hacking(traj: Trajectory) -> Optional[Verdict]:
             f"mean length {recent_lengths.mean():.0f} (cap=500)",
         )
     return None
+
+
+# Priority order — earlier detectors take precedence.
+# Why this order:
+#   1. NaN — irrecoverable, blocks everything downstream
+#   2. Reward hacking — env-specific high-confidence signal
+#   3. Death spiral — recent crash dominates other patterns
+#   4. Exploration collapse — common, distinctive
+#   5. Overshooting — high-variance pattern
+#   6. Stalling — last because needs longest history
+DETECTORS = [
+    detect_nan_explosion,
+    detect_reward_hacking,
+    detect_death_spiral,
+    detect_exploration_collapse,
+    detect_overshooting,
+    detect_stalling,
+]
+
+
+def diagnose(traj: Trajectory) -> Verdict:
+    """Run all detectors in priority order. Return first verdict or 'alive'."""
+    for detector in DETECTORS:
+        verdict = detector(traj)
+        if verdict is not None:
+            return verdict
+    return Verdict("alive", "Agent reached training budget without classified failure")
