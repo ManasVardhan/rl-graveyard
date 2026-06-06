@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.coverage
+*.sqlite-journal
+data/*.sqlite
+!data/.gitkeep
+.venv/
+.DS_Store
